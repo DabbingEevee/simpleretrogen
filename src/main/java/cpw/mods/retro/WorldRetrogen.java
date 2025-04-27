@@ -18,8 +18,30 @@
 
 package cpw.mods.retro;
 
-import com.google.common.collect.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Semaphore;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import org.apache.logging.log4j.Level;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.MapMaker;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -32,9 +54,9 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.IChunkGenerator;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.gen.ChunkProviderServer;
+import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
@@ -51,15 +73,8 @@ import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import org.apache.logging.log4j.Level;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Semaphore;
-
-@Mod(modid="simpleretrogen", name="Simple Retrogen", acceptableRemoteVersions="*", acceptedMinecraftVersions = "[1.9,1.13)")
+@Mod(modid="simpleretrogen", name="Simple Retrogen", acceptableRemoteVersions="*", acceptedMinecraftVersions = "[1.12,1.13)")
 @ParametersAreNonnullByDefault
 public class WorldRetrogen {
     private List<Marker> markers = Lists.newArrayList();
@@ -434,12 +449,12 @@ public class WorldRetrogen {
         Random fmlRandom = new Random(worldSeed);
         long xSeed = fmlRandom.nextLong() >> 2 + 1L;
         long zSeed = fmlRandom.nextLong() >> 2 + 1L;
-        long chunkSeed = (xSeed * chunkCoords.chunkXPos + zSeed * chunkCoords.chunkZPos) ^ worldSeed;
+        long chunkSeed = (xSeed * chunkCoords.x + zSeed * chunkCoords.z) ^ worldSeed;
 
         fmlRandom.setSeed(chunkSeed);
         ChunkProviderServer providerServer = world.getChunkProvider();
         IChunkGenerator generator = ObfuscationReflectionHelper.getPrivateValue(ChunkProviderServer.class, providerServer, "field_186029_c", "chunkGenerator");
-        delegates.get(retroClass).delegate.generate(fmlRandom, chunkCoords.chunkXPos, chunkCoords.chunkZPos, world, generator, providerServer);
+        delegates.get(retroClass).delegate.generate(fmlRandom, chunkCoords.x, chunkCoords.z, world, generator, providerServer);
         FMLLog.fine("Retrogenerated chunk for %s", retroClass);
         completeRetrogen(chunkCoords, world, retroClass);
     }
